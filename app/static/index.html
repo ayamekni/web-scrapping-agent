@@ -8,24 +8,31 @@
 </head>
 <body>
   <main class="shell">
-    <header>
+    <header class="reveal">
       <div class="eyebrow">HUMAN-IN-THE-LOOP RESEARCH</div>
       <h1>Turn a web page into<br><em>useful content.</em></h1>
       <p class="intro">Paste a public URL. The agent chooses direct HTML or a headless browser, cleans the result, and gives you final control.</p>
     </header>
 
-    <section class="card input-card">
+    <section class="card input-card reveal">
       <form id="scrape-form">
         <label for="url">Website URL</label>
         <div class="url-row">
           <input id="url" type="url" placeholder="https://example.com/article" required>
-          <button id="scrape-button" type="submit">Scrape page <span>→</span></button>
+          <button id="scrape-button" type="submit"><span id="scrape-button-label">Scrape page</span> <span class="arrow">→</span></button>
         </div>
         <label for="instructions">Cleanup instructions <small>optional</small></label>
         <textarea id="instructions" rows="2">Extract the useful information and remove navigation, ads, and repeated boilerplate.</textarea>
       </form>
+
       <div id="progress" class="progress hidden" aria-live="polite">
-        <span class="spinner"></span><span id="progress-text">Inspecting the page…</span>
+        <ol class="progress-steps">
+          <li class="step" data-step="fetch"><span class="dot"></span><span class="step-label">Fetching the page</span></li>
+          <li class="step" data-step="detect"><span class="dot"></span><span class="step-label">Checking if rendering is needed</span></li>
+          <li class="step" data-step="extract"><span class="dot"></span><span class="step-label">Extracting readable content</span></li>
+          <li class="step" data-step="clean"><span class="dot"></span><span class="step-label">Cleaning for review</span></li>
+        </ol>
+        <div class="progress-elapsed"><span id="elapsed">0.0s</span> elapsed</div>
       </div>
       <div id="error" class="message error hidden"></div>
     </section>
@@ -43,8 +50,17 @@
         </div>
       </div>
       <div id="warning" class="message warning hidden"></div>
-      <label for="content">Cleaned content — edit anything before approval</label>
+
+      <div class="editor-head">
+        <label for="content">Cleaned content — edit anything before approval</label>
+        <div class="tab-group" role="tablist">
+          <button type="button" class="tab-button active" data-tab="edit" role="tab" aria-selected="true">Edit</button>
+          <button type="button" class="tab-button" data-tab="preview" role="tab" aria-selected="false">Preview</button>
+        </div>
+      </div>
       <textarea id="content" class="editor" spellcheck="true"></textarea>
+      <div id="preview" class="editor preview hidden"></div>
+
       <div class="actions">
         <button id="raw-toggle" class="secondary" type="button">Show raw extraction</button>
         <span id="word-count"></span>
@@ -65,4 +81,3 @@
   <script src="/static/app.js"></script>
 </body>
 </html>
-
