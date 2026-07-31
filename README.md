@@ -14,6 +14,12 @@ A human-in-the-loop web content agent. Give it a public URL and it:
 
 It's built as a small, readable reference implementation of a "scrape responsibly" pipeline: SSRF guards, multi-candidate extraction, and a mandatory human approval step, rather than a scraper that tries to defeat bot protection.
 
+## Demo
+
+[![Watch a demo of the agent scraping a page and pausing for human review](docs/demo-thumbnail.jpg)](docs/demo.mp4)
+
+*Click the image to play the video (`docs/demo.mp4`).*
+
 ## Architecture
 
 ![Architecture diagram: the browser UI posts to the FastAPI app, which validates the URL, fetches it over HTTP, extracts readable text from four scored candidates, optionally re-renders with a headless-Chromium subprocess when the page looks thin or JS-rendered, picks the best-scoring extraction, pulls metadata, optionally runs it through a Groq LLM cleanup pass, and returns it to the browser for human review and approval.](docs/architecture.png)
