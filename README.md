@@ -16,39 +16,7 @@ It's built as a small, readable reference implementation of a "scrape responsibl
 
 ## Architecture
 
-```mermaid
-flowchart TD
-    U["Browser UI<br/>(static/index.html + app.js)"]
-    API["FastAPI app<br/>(app/main.py)"]
-    SEC["validate_public_url()<br/>blocks private/loopback/reserved IPs"]
-    HTTP["scrape_http()<br/>httpx GET"]
-    EXTRACT1["extract_readable_text()"]
-    CAND["4 candidates scored by content_quality():<br/>DOM fallback, trafilatura recall/precision,<br/>readability-lxml"]
-    NEEDSJS{"needs_browser()?<br/>thin page / SPA shell / blocked"}
-    BROWSER["scrape_browser()<br/>spawns isolated subprocess"]
-    WORKER["browser_worker.py<br/>Playwright + headless Chromium"]
-    EXTRACT2["extract_readable_text()"]
-    PICK["Best-scoring extraction"]
-    META["extract_metadata()<br/>author / date / description"]
-    LLMCHECK{"GROQ_API_KEY set?"}
-    CLEAN["app/llm.py<br/>Groq chat completion cleanup"]
-    RESP["ScrapeResponse<br/>raw + cleaned text, metadata, warnings"]
-    APPROVE["/api/approve"]
-    DONE["Approved Markdown returned to the browser"]
-
-    U -- "1. POST /api/scrape" --> API
-    API --> SEC --> HTTP
-    HTTP -- "network/HTTP error" --> BROWSER
-    HTTP --> EXTRACT1 --> CAND --> NEEDSJS
-    NEEDSJS -- "no" --> PICK
-    NEEDSJS -- "yes" --> BROWSER
-    BROWSER --> WORKER --> EXTRACT2 --> PICK
-    PICK --> META --> LLMCHECK
-    LLMCHECK -- "yes" --> CLEAN --> RESP
-    LLMCHECK -- "no" --> RESP
-    RESP --> U
-    U -- "2. human edits, then POST /api/approve" --> APPROVE --> DONE
-```
+![Architecture diagram: the browser UI posts to the FastAPI app, which validates the URL, fetches it over HTTP, extracts readable text from four scored candidates, optionally re-renders with a headless-Chromium subprocess when the page looks thin or JS-rendered, picks the best-scoring extraction, pulls metadata, optionally runs it through a Groq LLM cleanup pass, and returns it to the browser for human review and approval.](docs/architecture.png)
 
 **Why a subprocess for the browser renderer?** Uvicorn's `--reload` mode on Windows uses a selector event loop, which can't spawn the subprocess Playwright needs internally. `browser_worker.py` runs as a fresh helper process (`python -m app.browser_worker`) so it gets a normal event loop regardless of what the parent server is doing — see [app/scraper.py](app/scraper.py)'s `_scrape_browser_sync`.
 
